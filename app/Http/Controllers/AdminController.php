@@ -29,40 +29,17 @@ class AdminController extends Controller
     public function getIncompleteSurveyUsers()
     {
         $authUser = Auth::user(); 
-        $userIds = User::all()->pluck('id');
-        // Fetch non-admin users who have an incomplete survey.
+    
+        // Fetch non-admin users who do NOT have a survey response record.
         $incompleteUsers = User::where('is_admin', false)
-            ->where(function ($query) {
-                // Condition 1: User NOT in survey_responses table
-                $query->whereDoesntHave('surveyResponse');
-
-                // OR
-
-                $query->orWhere(function ($query2) {
-                    // Condition 2: User IS in survey_responses table AND has any NULL 'q' column
-                    $query2->whereHas('surveyResponse', function ($query3) { // Ensure user *has* a survey response
-                        $query3->where(function ($query4) { // Check for NULL in any 'q' column within the survey response
-                            $query4->whereNull('q1')
-                                ->orWhereNull('q2')
-                                ->orWhereNull('q3')
-                                ->orWhereNull('q4')
-                                ->orWhereNull('q5')
-                                ->orWhereNull('q6')
-                                ->orWhereNull('q7')
-                                ->orWhereNull('q8')
-                                ->orWhereNull('q9')
-                                ->orWhereNull('q10');
-                        });
-                    });
-                });
-            })
+            ->whereDoesntHave('surveyResponse')
             ->paginate(10);
-
+    
         return response()->json([
-            'users' => $incompleteUsers->items(), // Get current page data
+            'users' => $incompleteUsers->items(),      // Current page data
             'total_pages' => $incompleteUsers->lastPage(), // Total pages
             'current_page' => $incompleteUsers->currentPage(),
-            'total' => $incompleteUsers->total(),
+            'total' => $incompleteUsers->total(),       // Total number of records
         ]);
     }
 
