@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\SurveyResponse;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 
 class SurveyController extends Controller
@@ -12,17 +13,28 @@ class SurveyController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'q1'  => 'required|integer|min:0|max:5',
-            'q2'  => 'required|integer|min:0|max:5',
-            'q3'  => 'required|integer|min:0|max:5',
-            'q4'  => 'required|integer|min:0|max:5',
-            'q5'  => 'required|integer|min:0|max:5',
-            'q6'  => 'required|integer|min:0|max:5',
-            'q7'  => 'required|integer|min:0|max:5',
-            'q8'  => 'required|integer|min:0|max:5',
-            'q9'  => 'required|integer|min:0|max:5',
-            'q10' => 'required|integer|min:0|max:5',
+            'q1'  => 'nullable|integer|min:0|max:5',
+            'q2'  => 'nullable|integer|min:0|max:5',
+            'q3'  => 'nullable|integer|min:0|max:5',
+            'q4'  => 'nullable|integer|min:0|max:5',
+            'q5'  => 'nullable|integer|min:0|max:5',
+            'q6'  => 'nullable|integer|min:0|max:5',
+            'q7'  => 'nullable|integer|min:0|max:5',
+            'q8'  => 'nullable|integer|min:0|max:5',
+            'q9'  => 'nullable|integer|min:0|max:5',
+            'q10' => 'nullable|integer|min:0|max:5',
+        ], [
+            'at_least_one.required' => 'At least one question must be answered.'
         ]);
+        
+        // Custom validation: Ensure at least one field is filled
+        if (!collect($request->only(['q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8', 'q9', 'q10']))
+            ->filter(fn($value) => $value !== null)
+            ->count()) {
+            return response()->json([
+                'message' => 'At least one question must be answered.'
+            ], 422);
+        }
 
         $user = Auth::user();
 
@@ -48,4 +60,18 @@ class SurveyController extends Controller
 
         return response()->json($stats);
     }
+    /**
+     * Optionally, add an endpoint to check survey status.
+     * GET /api/survey/status
+     */
+    public function status()
+    {
+        $user = Auth::user();
+        $taken = SurveyResponse::where('user_id', $user->id)->exists();
+        
+        return response()->json([
+            'taken' => $taken
+        ]);
+    }
+    
 }

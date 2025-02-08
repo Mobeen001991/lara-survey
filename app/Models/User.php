@@ -22,7 +22,7 @@ class User extends Authenticatable
         'email',
         'password',
     ];
-
+    protected $appends = ['has_taken_survey']; 
     /**
      * The attributes that should be hidden for serialization.
      *
@@ -48,6 +48,10 @@ class User extends Authenticatable
     public function surveyResponse()
     {
         return $this->hasOne(SurveyResponse::class);
+    }
+    public function getHasTakenSurveyAttribute()
+    {
+        return $this->surveyResponse()->exists(); // Returns true if a survey exists for this user
     }
 
 }
