@@ -22,6 +22,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Admin-only routes
     Route::middleware('admin')->prefix('admin')->group(function () {
+        Route::get('/users', [AdminController::class, 'users']);
         Route::get('/incomplete-users', [AdminController::class, 'getIncompleteSurveyUsers']);
         Route::get('/survey/incomplete/{userId}', [AdminController::class, 'getSurveyResultsByUser']);
         Route::post('/survey/submit/{userId}', [AdminController::class, 'submitSurveyResultsByUser']);
