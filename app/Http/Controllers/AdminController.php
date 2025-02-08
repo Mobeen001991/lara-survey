@@ -20,6 +20,7 @@ class AdminController extends Controller
             'users' => $users->items(), // Get current page data
             'total_pages' => $users->lastPage(), // Total pages
             'current_page' => $users->currentPage(),
+            'total' => $users->total(),
         ]);
     }
     /**
@@ -61,6 +62,7 @@ class AdminController extends Controller
             'users' => $incompleteUsers->items(), // Get current page data
             'total_pages' => $incompleteUsers->lastPage(), // Total pages
             'current_page' => $incompleteUsers->currentPage(),
+            'total' => $incompleteUsers->total(),
         ]);
     }
 
