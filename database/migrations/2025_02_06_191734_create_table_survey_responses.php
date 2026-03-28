@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('survey_responses', function (Blueprint $table) {
+        Schema::create('survey_responses', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id')->unique(); // one response per user
             $table->tinyInteger('q1')->nullable();
