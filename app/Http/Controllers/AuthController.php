@@ -2,47 +2,37 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\ValidationException;
-use Validator;
-use App\MOdels\User;
+use App\Http\Requests\LoginRequest;
+use App\Http\Requests\RegisterRequest;
+use App\Http\Resources\UserResource;
+use App\Services\AuthService;
+use Illuminate\Http\JsonResponse;
 
 class AuthController extends Controller
 {
-    //
-    function register(Request $request){
+    public function __construct(
+        private readonly AuthService $authService
+    ) {}
 
-        //\Log::info('Request Data:', $request->all()); // Log request data
+    public function register(RegisterRequest $request): JsonResponse
+    {
+        $result = $this->authService->register($request->validated());
 
-        $request->validate([
-            'name'=>'required|string|min:5',
-            'email'=>'required|string|unique:users',
-            'password'=>'required|string',
-        ]);
-
-        $user = new User($request->all());
-        if($user->save()){
-            $token = $user->createToken('Personal Access Token');
-            return response()->json([
-                'type'=> 'success',
-                'token'=>$token->plainTextToken
-            ]);
-        }
         return response()->json([
-            'type'=> 'error',
-            'msg' =>'Something went wrong please check'
+            'type' => 'success',
+            'token' => $result['token'],
+            'user' => UserResource::make($result['user']),
         ]);
     }
-    function login(Request $request){
-        $request->validate([
-            'email'=>'required|string',
-            'password'=>'required|string'
+
+    public function login(LoginRequest $request): JsonResponse
+    {
+        $result = $this->authService->login($request->validated());
+
+        return response()->json([
+            'type' => 'success',
+            'user' => UserResource::make($result['user']),
+            'token' => $result['token'],
         ]);
-        if(!Auth::attempt($request->all())){
-            return response()->json(['message'=>'Unauthorized']);
-        }
-        $user = User::where($request->all)->first();
-        return response()->json(['type'=>'success', 'data'=>$user, 'token'=>$user->createToken('auth-token')->plainTextToken]);
     }
 }
