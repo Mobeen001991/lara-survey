@@ -2,59 +2,36 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\ValidationException;
-use Validator;
+use App\Http\Requests\LoginRequest;
+use App\Http\Requests\RegisterRequest;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
-    //
-    function register(Request $request)
+    public function register(RegisterRequest $request): JsonResponse
     {
-        // Validate the incoming request data.
-        $request->validate([
-            'name'             => 'required|string|min:5',
-            'email'            => 'required|string|unique:users',
-            'password'         => 'required|string|min:5',
-            'password_confirmation' => 'required|string|same:password', // Ensure confirm_password matches password
-        ]);
+        $user = User::create($request->validated());
 
-        // Create a new User instance and set its properties.
-        $user = new User();
-        $user->name  = $request->name;
-        $user->email = $request->email;
-        // Hash the password before storing it.
-        $user->password = bcrypt($request->password);
-
-        if ($user->save()) {
-            // Create a personal access token for the user.
-            $token = $user->createToken('Personal Access Token');
-
-            return response()->json([
-                'type'  => 'success',
-                'token' => $token->plainTextToken,
-                'user'  => $user
-            ]);
-        }
-
-        return response()->json([
-            'type' => 'error',
-            'msg'  => 'Something went wrong, please check.',
-        ]);
+        return $this->authResponse($user, 'Personal Access Token');
     }
 
-    function login(Request $request){
-        $request->validate([
-            'email'=>'required|string',
-            'password'=>'required|string'
-        ]);   
-        if(!Auth::attempt($request->all())){
-            return response()->json(['message'=>'Unauthorized'],400);
+    public function login(LoginRequest $request): JsonResponse
+    {
+        if (! Auth::attempt($request->only('email', 'password'))) {
+            return response()->json(['message' => 'Unauthorized'], 401);
         }
-     
-        $user = User::where(['email'=>$request->email])->first();
-        return response()->json(['type'=>'success', 'user'=>$user, 'token'=>$user->createToken('auth-token')->plainTextToken]);
+
+        return $this->authResponse(Auth::user());
+    }
+
+    private function authResponse(User $user, string $tokenName = 'auth-token'): JsonResponse
+    {
+        return response()->json([
+            'type' => 'success',
+            'token' => $user->createToken($tokenName)->plainTextToken,
+            'user' => $user,
+        ]);
     }
 }
